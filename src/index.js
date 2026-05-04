@@ -1,13 +1,27 @@
 import dotenv from "dotenv";
-import express from "express";
-
+import {app} from './app.js'
 import connectDb from "./db/index.js";
 
 dotenv.config({
     path:'./.env'
 })
 
-connectDb();
+connectDb()
+.then(()=>{
+    // server is a asynchronous code thats why we cant handle it with try catch
+     const server= app.listen(process.env.PORT || 8000,()=>{
+        console.log("Server is running at",process.env.PORT);
+      })
+    
+    server.on("error",error=>{
+       console.log("Server failed : ",error);
+    })
+     
+   
+})
+.catch((error)=>{
+    console.log("MongoDb conection failed !!: ",error);
+})
 
 
 
