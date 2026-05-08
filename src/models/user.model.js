@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const UserSchema = new Schema(
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -52,7 +52,7 @@ const UserSchema = new Schema(
 );
 
 // this is pre hook(Hooks are functions that run automatically at specific points in a process.)
-UserSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
   // Check if password field was modified or newly set
   // If NOT modified → skip hashing and go to next middleware
   if (!this.isModified("password")) return next();
@@ -65,17 +65,17 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-UserSchema.methods.isPasswordCorrect = async function(Password){
-  return  await bcrypt.compare("password",this.Password)
+userSchema.methods.isPasswordCorrect = async function(password) {
+  return await bcrypt.compare(password, this.password);
 }
 
-UserSchema.methods.generateAccessToken = function(){
+userSchema.methods.generateAccessToken = function(){
   return jwt.sign(
     {
       _id : this._id,
-      email = this.email,
-      username = this.username,
-      fullname = this.fullname
+      email : this.email,
+      username : this.username,
+      fullname : this.fullname
     },
     Process.env.ACCESS_TOKEN_SECRET,
     {
@@ -84,7 +84,7 @@ UserSchema.methods.generateAccessToken = function(){
   )
 }
 
-UserSchema.methods.generateRefreshToken = function(){
+userSchema.methods.generateRefreshToken = function(){
   return jwt.sign(
     {
       _id : this._id,
@@ -96,4 +96,4 @@ UserSchema.methods.generateRefreshToken = function(){
   )
 }
 
-export const User = mongoose.model("User", UserSchema);
+export const User = mongoose.model("User", userSchema);
