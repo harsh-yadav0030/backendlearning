@@ -52,17 +52,16 @@ const userSchema = new Schema(
 );
 
 // this is pre hook(Hooks are functions that run automatically at specific points in a process.)
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   // Check if password field was modified or newly set
   // If NOT modified → skip hashing and go to next middleware
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) return ;
 
   // Hash the password before saving to DB
   // bcrypt.hash(password, saltRounds)10 security level (high no slow code)
   this.password = await bcrypt.hash(this.password, 10);
  
   // Move to next middleware / complete save
-  next();
 });
 
 userSchema.methods.isPasswordCorrect = async function(password) {
@@ -77,7 +76,7 @@ userSchema.methods.generateAccessToken = function(){
       username : this.username,
       fullname : this.fullname
     },
-    Process.env.ACCESS_TOKEN_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn:process.env.ACCESS_TOKEN_EXPIRY
     },
@@ -89,7 +88,7 @@ userSchema.methods.generateRefreshToken = function(){
     {
       _id : this._id,
     },
-    Process.env.REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn:process.env.REFRESH_TOKEN_EXPIRY
     },

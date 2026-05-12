@@ -17,26 +17,28 @@ const registerUser = asyncHandler( async (req,res)=>{
 
   // checking for fields not to be empty
   const {fullname,email,username,password}=req.body
+
   
   if([fullname,email,username,password].some((field)=>
     field?.trim() === "")
 ){
-     throw new ApiError("404","fullname field is empty")
+     throw new ApiError(404,"fullname field is empty")
   }
 
-
-  const existedUser=User.findOne({
+  const existedUser= await User.findOne({
     $or :[{username},{email}]
   })
-
-  if(existedUser){
-    throw new ApiError("409","User Already exist ")
+  if(existedUser) {
+    throw new ApiError(409, "User already exists");
   }
   
-const avatarLocalPath = req.files?.avatar[0]?.path;
-const coverImageLocalPath = req.files?.coverImage[0]?.path;
+const avatarLocalPath = req.files?.avatar?.[0]?.path;
+const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
-if(avatarLocalPath){
+console.log(req.files);
+console.log(req.body);
+
+if(!avatarLocalPath){
   throw new ApiError(400,"avatar file is required")
 }
 
@@ -60,12 +62,14 @@ const user=await User.create({
 const createdUser=await User.findById(user._id).select(
   "-password -refreshToken"
 )
-if(!createdUser){
-  console.log("Something went wrong while registering the user")
+
+if (!createdUser) {
+  throw new ApiError(500, "Something went wrong while registering user");
 }
 
+
 return res.status(201).json(
-  new ApiResponse("2  00",createdUser,"user registered successfully")
+  new ApiResponse(200,createdUser,"user registered successfully")
 ) 
 
 })
