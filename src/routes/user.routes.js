@@ -1,3 +1,4 @@
+import { asyncHandler } from "../utils/asynchandler.js";
 import { Router } from "express";
 import { registerUser ,loginUser, logoutUser} from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middlewares.js"
@@ -22,6 +23,6 @@ router.route("/register").post(
 router.route("/login").post(loginUser);
 
 // secured routes
-router.route("/logoutUser").post(verifyJWT,logoutUser);
+router.route("/logout").post(verifyJWT,logoutUser);
 
 export default router;
