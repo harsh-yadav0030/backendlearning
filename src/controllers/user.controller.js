@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "JsonWebToken";
+import { application } from "express";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -189,36 +190,59 @@ const refreshAccesToken = asyncHandler(async (req, res) => {
     process.env.REFRESH_TOKEN_SECRET
   );
 
- try 
- {const user = await User.findById(decodedToken?._id);
+  try {
+    const user = await User.findById(decodedToken?._id);
 
-  if (!user) {
-    throw new ApiError(401, "Invalid refresh token");
-  }
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
 
-  if(incomingRefreshToken!==user?.refreshToken){
-    throw new ApiError(401,"Refresh Token is expired or used");
-  }
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh Token is expired or used");
+    }
 
-  const {accessToken,refreshToken}= await generateAccessAndRefreshTokens(user._id);
-  user.refreshToken=newRefreshToken;
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-      new ApiResponse(200, { accessToken, refreshToken }, "Access Token refreshed")
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user._id
     );
-}
-catch(error){
-  throw new ApiError(401,error?.message || "invalid RefreshToken")
-}
+    user.refreshToken = newRefreshToken;
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken },
+          "Access Token refreshed"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "invalid RefreshToken");
+  }
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const {oldPassword,newPassword}=req.body;
+
+  const user=await User.findById(req.user?._id);
+  const isPasswordCorrect=await user.isPasswordCorrect(oldPassword);// compare whether the old password is correct or not
+  if(!isPasswordCorrect){
+    throw new ApiError(400,"Invalid password");
+  }
+
+  user.password=newPassword;
+
+  await user.save({validateBeforeSave:false});
+
 
 });
 
-export { registerUser, loginUser, logoutUser };
+
+
+
+export { registerUser, loginUser, logoutUser, refreshAccesToken };
